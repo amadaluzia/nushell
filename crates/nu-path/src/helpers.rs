@@ -1,3 +1,4 @@
+use std::env;
 use std::path::PathBuf;
 
 use crate::AbsolutePathBuf;
@@ -18,10 +19,13 @@ pub fn cache_dir() -> Option<AbsolutePathBuf> {
 
 /// Return the nushell config directory.
 pub fn nu_config_dir() -> Option<AbsolutePathBuf> {
-    configurable_dir_path("XDG_CONFIG_HOME", dirs::config_dir).map(|mut p| {
-        p.push("nushell");
-        p
-    })
+    match env::var("NUSHELL_CONFIG_DIR") {
+        Ok(val) => Some(AbsolutePathBuf::try_from(val).expect("Invalid configuration path.")),
+        Err(_) => configurable_dir_path("XDG_CONFIG_HOME", dirs::config_dir).map(|mut p| {
+            p.push("nushell");
+            p
+        }),
+    }
 }
 
 fn configurable_dir_path(
